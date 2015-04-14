@@ -16,8 +16,14 @@ http://owlgraphic.com/owlcarousel/
 
 For now, works only with images.
 
+== Screenshots ==
+1. Click Add or Upload files to insert images
+2. When images selected, click use this file
+3. Copy the shortcode and paste it anywhere
+4. View post/page to see results
+
 == Installation ==
-Go to your Wordpress Dashboard. From there select Plugins -> Add New. Search for \'Wordpress Owl Carousel\', make sure it found the right plugin and click Install Now.
+Go to your Wordpress Dashboard. From there select Plugins -> Add New. Search for \'WP Owl Carousel\', make sure it found the right plugin and click Install Now.
 
 Alternatively, extract the zip file and upload the contents to the wp-content/plugins/ directory of your WordPress installation and then activate the plugin from the plugins page.
 

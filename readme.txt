@@ -29,7 +29,7 @@ Go to your Wordpress Dashboard. From there select Plugins -> Add New. Search for
 Alternatively, extract the zip file and upload the contents to the wp-content/plugins/ directory of your WordPress installation and then activate the plugin from the plugins page.
 
 == Changelog ==
-1.1.0
-Added ability to link to a different image size and specify a rel attribute for lightboxes
-1.0.0
-First release
+= 1.1.0 =
+* Added ability to link to a different image size and specify a rel attribute for lightboxes
+= 1.0.0 =
+* First release

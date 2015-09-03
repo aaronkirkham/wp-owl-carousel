@@ -3,6 +3,7 @@ Contributors: Dabuuker
 Tags: carousel, owl carousel, slideshow, slider
 Requires at least: 4.0
 Tested up to: 4.3
+Stable tag: 1.1.0
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

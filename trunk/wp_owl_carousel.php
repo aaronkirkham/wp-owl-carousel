@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Owl Carousel
  * Description: Owl Carousel integration for Wordpress
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Tanel Kollamaa
  * Text Domain: wp_owl
  * License: GPL2

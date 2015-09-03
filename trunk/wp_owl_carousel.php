@@ -103,15 +103,32 @@ class Wp_Owl_Carousel{
             'type'       => 'file_list'
         ) );
 
+        $image_sizes = get_intermediate_image_sizes();
         $carousel_metabox->add_field( array(
-            'name'             => 'Select size',
-            'desc'             => 'Select image size to use',
+            'name'             => __('Select size','wp_owl'),
+            'desc'             => __('Select image size to use','wp_owl'),
             'id'               => self::prefix . 'image_size',
             'type'             => 'select',
             'show_option_none' => false,
             'default'          => 'custom',
-            'options'          => get_intermediate_image_sizes()
+            'options'          => $image_sizes
         ) );
+
+        $carousel_metabox->add_field(array(
+            'name' => __('Rel attribute','wp_owl'),
+            'desc' => __('Used to open images in a lightbox, see the documentation of your lightbox plugin for this value','wp_owl'),
+            'default' => 'lightbox',
+            'type' => 'text',
+            'id' => self::prefix .'rel'
+        ));
+
+        $carousel_metabox->add_field(array(
+            'name' => __('Link to image size','wp_owl'),
+            'desc' => __('Generates link to specified image size','wp_owl'),
+            'type' => 'select',
+            'id' => self::prefix .'link_to_size',
+            'options' => array_merge(array('none'),$image_sizes)
+        ));
 
         foreach($owl_settings as $id => $setting) {
             if($setting['cmb_type'] == 'checkbox'){
@@ -160,18 +177,30 @@ class Wp_Owl_Carousel{
         $settings = $this->generate_settings_array($id);
         $settings = json_encode($settings);
         $lazyLoad = get_post_meta($id,self::prefix.'lazyLoad',true);
+        $link_to_size = get_post_meta($id,self::prefix.'link_to_size',true);
+        $rel = get_post_meta($id,self::prefix.'rel',true);
         $html = '<div id="owl-carousel-'.$id.'" class="owl-carousel" data-owloptions=\''.$settings.'\'>';
-
         foreach($files as $id => $url){
             $html .= '<div>';
             $img = wp_get_attachment_image_src( $id, $sizes[$size_id] );
 
+            if($link_to_size != 0){
+                $img_link = wp_get_attachment_image_src($id,$sizes[$link_to_size]);
+
+                $html .= '<a href="'.$img_link[0].'"';
+                $html .= (!empty($rel)) ? ' rel="'.$rel.'"' : '';
+                $html .= ' >';
+            }
+
             $html .= '<img src="' . $img[0] .'" ';
+
             if($lazyLoad == 'on'){
                 $html .= 'class="lazyOwl" ';
                 $html .= 'data-src="'.$img[0].'" ';
             }
             $html .= '/>';
+
+            $html .= ($link_to_size != 0) ? ' </a>' : '';
 
             $html .='</div>';
         }

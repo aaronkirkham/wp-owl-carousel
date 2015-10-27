@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Owl Carousel
  * Description: Owl Carousel integration for Wordpress
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Tanel Kollamaa
  * Text Domain: wp_owl
  * License: GPL2
@@ -183,16 +183,15 @@ class Wp_Owl_Carousel{
         foreach($files as $id => $url){
             $html .= '<div>';
             $img = wp_get_attachment_image_src( $id, $sizes[$size_id] );
-
             if($link_to_size != 0){
-                $img_link = wp_get_attachment_image_src($id,$sizes[$link_to_size]);
+                $img_link = wp_get_attachment_image_src($id,$sizes[$link_to_size - 1]);
 
                 $html .= '<a href="'.$img_link[0].'"';
                 $html .= (!empty($rel)) ? ' rel="'.$rel.'"' : '';
                 $html .= ' >';
             }
 
-            $html .= '<img src="' . $img[0] .'" ';
+            $html .= '<img width="'.$img[1].'" height="'.$img[2].'" src="' . $img[0] .'" ';
 
             if($lazyLoad == 'on'){
                 $html .= 'class="lazyOwl" ';

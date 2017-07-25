@@ -1,37 +1,25 @@
-=== WP Owl Carousel ===
-Contributors: Dabuuker
-Tags: carousel, owl carousel, slideshow, slider
-Requires at least: 4.0
-Tested up to: 4.3.1
-Stable tag: 1.1.1
-License: GPL2
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+### Owl Carousel for WordPress
+<sup>*This plugin is based off [Tanel Kollamaa's "WP Owl Carousel"](https://wordpress.org/plugins/wp-owl-carousel/) (no longer maintained)*</sup>
 
-Owl Carousel integration for Wordpress
+* Install & Activate pluigin inside WordPress admin
+* Create Carousels using the menu in the admin sidebar
+* Use Carousel in your posts using shortcode `[wp_owl id="xxxx"]`
 
-== Description ==
-Owl Carousel integration for Wordpress
 
-Owl Carousel author: Bartosz Wojciechowski
-http://owlgraphic.com/owlcarousel/
+#### Disable asset loading
+```php
+add_filter( 'wp_owl_carousel_enqueue_assets', '__return_false' );
+```
 
-For now, works only with images.
 
-== Screenshots ==
-1. Click Add or Upload files to insert images
-2. When images selected, click use this file
-3. Copy the shortcode and paste it anywhere
-4. View post/page to see results
+#### Filters
 
-== Installation ==
-Go to your Wordpress Dashboard. From there select Plugins -> Add New. Search for \'WP Owl Carousel\', make sure it found the right plugin and click Install Now.
+`wp_owl_carousel_enqueue_assets` - Toggle **all** Owl Carousel asset loading.
 
-Alternatively, extract the zip file and upload the contents to the wp-content/plugins/ directory of your WordPress installation and then activate the plugin from the plugins page.
+`wp_owl_carousel_enqueue_css` - Toggle Owl Carousel base css loading.
 
-== Changelog ==
-= 1.1.1 =
-* Fixed issue with wrong link to image size
-= 1.1.0 =
-* Added ability to link to a different image size and specify a rel attribute for lightboxes
-= 1.0.0 =
-* First release
+`wp_owl_carousel_enqueue_theme_css` - Toggle Owl Carousel theme css loading.
+
+`wp_owl_carousel_enqueue_owl_js` - Toggle Owl Carousel js loading.
+
+`wp_owl_carousel_enqueue_plugin_js` - Toggle Owl Carousel for WordPress js loading.

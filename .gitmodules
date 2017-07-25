@@ -1,6 +1,6 @@
-[submodule "cmb2"]
-	path = cmb2
-	url = https://github.com/CMB2/CMB2.git
 [submodule "owlcarousel2"]
 	path = owlcarousel2
 	url = https://github.com/OwlCarousel2/OwlCarousel2.git
+[submodule "cmb2"]
+	path = cmb2
+	url = https://github.com/CMB2/CMB2.git

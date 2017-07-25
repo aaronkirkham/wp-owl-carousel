@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Owl Carousel for WordPress
- * Description: Owl Carousel integration for Wordpress
+ * Description: Owl Carousel integration for WordPress
  * Version: 2.0.0
  * Author: Aaron Kirkham
  * Author URI: https://kirkh.am
@@ -37,9 +37,9 @@ if ( is_admin() ) {
   require_once __DIR__ . '/cmb2/init.php';
 }
 
-include_once 'owl_settings.php';
+include_once 'owl-settings.php';
 
-class Wp_Owl_Carousel{
+class Wp_Owl_Carousel {
   protected $dir;
   protected $url;
   const prefix = 'wp_owl_';
@@ -96,7 +96,8 @@ class Wp_Owl_Carousel{
         'publicaly_queryable' => false,
         'query_var' => false,
         'show_ui' => true,
-        'supports' => array( 'title', 'custom-fields' )
+        'supports' => array( 'title', 'custom-fields' ),
+        'menu_icon' => 'dashicons-images-alt2'
       )
     );
   }
@@ -107,7 +108,7 @@ class Wp_Owl_Carousel{
     $carousel_metabox = new_cmb2_box( array(
       'id'            => 'wp_owl_metabox',
       'title'         => __( 'Owl Carousel', 'wp_owl' ),
-      'object_types'  => array( 'wp_owl' ), // Post type
+      'object_types'  => array( 'wp_owl' ),
       'context'       => 'normal',
       'priority'      => 'high',
       'show_names'    => true,
@@ -124,7 +125,7 @@ class Wp_Owl_Carousel{
     $image_sizes = get_intermediate_image_sizes();
     $carousel_metabox->add_field( array(
       'name'             => __( 'Select size', 'wp_owl' ),
-      'desc'             => __( 'Select image size to use', 'wp_owl' ),
+      'desc'             => __( 'Select image size to use.', 'wp_owl' ),
       'id'               => self::prefix . 'image_size',
       'type'             => 'select',
       'show_option_none' => false,
@@ -134,7 +135,7 @@ class Wp_Owl_Carousel{
 
     $carousel_metabox->add_field( array(
       'name' => __( 'Rel attribute', 'wp_owl' ),
-      'desc' => __( 'Used to open images in a lightbox, see the documentation of your lightbox plugin for this value', 'wp_owl' ),
+      'desc' => __( 'Used to open images in a lightbox, see the documentation of your lightbox plugin for this value.', 'wp_owl' ),
       'default' => 'lightbox',
       'type' => 'text',
       'id' => self::prefix . 'rel'
@@ -142,7 +143,7 @@ class Wp_Owl_Carousel{
 
     $carousel_metabox->add_field( array(
       'name' => __( 'Link to image size', 'wp_owl' ),
-      'desc' => __( 'Generates link to specified image size', 'wp_owl' ),
+      'desc' => __( 'Generates link to specified image size.', 'wp_owl' ),
       'type' => 'select',
       'id' => self::prefix . 'link_to_size',
       'options' => array_merge( array( 'none' ), $image_sizes )
@@ -172,7 +173,7 @@ class Wp_Owl_Carousel{
       return;
     }
 
-    echo sprintf( '<p>%s: <strong>[wp_owl id="%s"]</strong></p>', __( 'Paste this shortcode into a post or a page', 'wp_owl' ), $post->ID );
+    echo sprintf( '<p>%s: [wp_owl id="%s"]</p>', __( 'Paste this shortcode into a post or a page', 'wp_owl' ), $post->post_name );
   }
 
   function shortcode( $atts, $content = null ) {
@@ -192,19 +193,22 @@ class Wp_Owl_Carousel{
     }
   }
 
-  function generate_owl_html( $id ) {
+  function generate_owl_html( $slug ) {
+    $id = $this->wp_slug_to_id( $slug );
     $files = $this->get_owl_items( $id );
+
     if ( empty( $files ) ) {
       return;
     }
 
-    $lazy_load = get_post_meta( $id, self::prefix . 'lazy_Load', true );
+    $break_container = get_post_meta( $id, self::prefix . 'break_container', true );
+    $lazy_load = get_post_meta( $id, self::prefix . 'lazyLoad', true );
     $size_id = get_post_meta( $id, self::prefix . 'image_size', true );
     $sizes = get_intermediate_image_sizes();
     $settings = json_encode( $this->generate_settings_array( $id ) );
 
     // TODO: add some filters so people can customize id/class on both the container AND image.
-    $html = sprintf( '<div id="owl-carousel-%s" class="owl-carousel" data-owl-options="%s">', $id, htmlspecialchars( $settings, ENT_QUOTES, 'utf-8' ) );
+    $html = sprintf( '<section class="slider"><div id="owl-carousel-%s" class="owl-carousel" data-owl-options="%s">', $id, htmlspecialchars( $settings, ENT_QUOTES, 'utf-8' ) );
     foreach( $files as $id => $url ) {
       $image = wp_get_attachment_image_src( $id, $sizes[$size_id] );
 
@@ -215,6 +219,21 @@ class Wp_Owl_Carousel{
 
     $html .= '</div>';
     return $html;
+  }
+
+  // TODO: maybe just use ids to save the extra query?
+  function wp_slug_to_id( $slug ) {
+    $posts = get_posts( array(
+      'post_type' => 'wp_owl',
+      'posts_per_page' => 1,
+      'post_name__in' => [$slug]
+    ) );
+
+    if ( sizeof ( $posts ) > 0 ) {
+      return $posts[0]->ID;
+    }
+
+    return null;
   }
 
   function get_owl_items( $id ) {

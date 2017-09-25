@@ -9,10 +9,6 @@
  * License: GPL2
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-  die;
-}
-
 // This plugin is based off Tanel Kollamaa's "WP Owl Carousel"
 // https://wordpress.org/plugins/wp-owl-carousel/
 
@@ -32,6 +28,10 @@ if ( ! defined( 'ABSPATH' ) ) {
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
+if ( ! defined( 'ABSPATH' ) ) {
+  exit;
+}
 
 if ( is_admin() ) {
   require_once __DIR__ . '/cmb2/init.php';
@@ -106,31 +106,31 @@ class Wp_Owl_Carousel {
     global $owl_settings;
 
     $carousel_metabox = new_cmb2_box( array(
-      'id'            => 'wp_owl_metabox',
-      'title'         => __( 'Owl Carousel', 'wp_owl' ),
-      'object_types'  => array( 'wp_owl' ),
-      'context'       => 'normal',
-      'priority'      => 'high',
-      'show_names'    => true,
-      'closed'        => false
+      'id' => 'wp_owl_metabox',
+      'title' => __( 'Owl Carousel', 'wp_owl' ),
+      'object_types' => array( 'wp_owl' ),
+      'context' => 'normal',
+      'priority' => 'high',
+      'show_names' => true,
+      'closed' => false
     ) );
 
     $carousel_metabox->add_field( array(
-      'name'       => __( 'Images', 'wp_owl' ),
-      'desc'       => __( 'Images to use', 'wp_owl' ),
-      'id'         => self::prefix . 'images',
-      'type'       => 'file_list'
+      'name' => __( 'Images', 'wp_owl' ),
+      'desc' => __( 'Images to use', 'wp_owl' ),
+      'id' => self::prefix . 'images',
+      'type' => 'file_list'
     ) );
 
     $image_sizes = get_intermediate_image_sizes();
     $carousel_metabox->add_field( array(
-      'name'             => __( 'Select size', 'wp_owl' ),
-      'desc'             => __( 'Select image size to use.', 'wp_owl' ),
-      'id'               => self::prefix . 'image_size',
-      'type'             => 'select',
+      'name' => __( 'Select size', 'wp_owl' ),
+      'desc' => __( 'Select image size to use.', 'wp_owl' ),
+      'id' => self::prefix . 'image_size',
+      'type' => 'select',
       'show_option_none' => false,
-      'default'          => 'custom',
-      'options'          => $image_sizes
+      'default' => 'custom',
+      'options' => $image_sizes
     ) );
 
     $carousel_metabox->add_field( array(
@@ -149,7 +149,7 @@ class Wp_Owl_Carousel {
       'options' => array_merge( array( 'none' ), $image_sizes )
     ) );
 
-    foreach( $owl_settings as $id => $setting ) {
+    foreach ( $owl_settings as $id => $setting ) {
       if ( $setting['cmb_type'] == 'checkbox' ) {
         $def = $this->set_checkbox_default( $setting['default'] );
       }
@@ -207,18 +207,22 @@ class Wp_Owl_Carousel {
     $sizes = get_intermediate_image_sizes();
     $settings = json_encode( $this->generate_settings_array( $id ) );
 
+    ob_start();
+
     // TODO: add some filters so people can customize id/class on both the container AND image.
-    $html = sprintf( '<section class="slider"><div id="owl-carousel-%s" class="owl-carousel" data-owl-options="%s">', $id, htmlspecialchars( $settings, ENT_QUOTES, 'utf-8' ) );
-    foreach( $files as $id => $url ) {
+    echo sprintf( '<div id="owl-carousel-%s" class="owl-carousel" data-owl-options="%s">', $id, htmlspecialchars( $settings, ENT_QUOTES, 'utf-8' ) );
+
+    foreach ( $files as $id => $url ) {
       $image = wp_get_attachment_image_src( $id, $sizes[$size_id] );
 
-      $html .= '<div>';
-      $html .= sprintf( '<img %s width="%s" height="%s" />', self::get_image_attr( $lazy_load, $image ), $image[1], $image[2] );
-      $html .= '</div>';
+      echo '  <div>';
+      echo sprintf( '   <img %s width="%s" height="%s" />', self::get_image_attr( $lazy_load, $image ), $image[1], $image[2] );
+      echo '  </div>';
     }
 
-    $html .= '</div>';
-    return $html;
+    echo '</div>';
+
+    return ob_get_clean();
   }
 
   // TODO: maybe just use ids to save the extra query?
@@ -226,14 +230,10 @@ class Wp_Owl_Carousel {
     $posts = get_posts( array(
       'post_type' => 'wp_owl',
       'posts_per_page' => 1,
-      'post_name__in' => [$slug]
+      'post_name__in' => array( $slug )
     ) );
 
-    if ( sizeof ( $posts ) > 0 ) {
-      return $posts[0]->ID;
-    }
-
-    return null;
+    return sizeof( $posts ) > 0 ? $posts[0]->ID : null;
   }
 
   function get_owl_items( $id ) {

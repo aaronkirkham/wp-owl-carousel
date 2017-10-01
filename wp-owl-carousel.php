@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Owl Carousel for WordPress
  * Description: Owl Carousel integration for WordPress
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: Aaron Kirkham
  * Author URI: https://kirkh.am
  * Text Domain: wp_owl
@@ -33,6 +33,14 @@ if ( ! defined( 'ABSPATH' ) ) {
   exit;
 }
 
+// initialise the updater
+require_once __DIR__ . '/plugin-update-checker/plugin-update-checker.php';
+$check_for_updates = Puc_v4_Factory::buildUpdateChecker(
+  'https://github.com/aaronkirkham/wp-owl-carousel/',
+  __FILE__,
+  'wp-owl-carousel'
+);
+
 if ( is_admin() ) {
   require_once __DIR__ . '/cmb2/init.php';
 }
@@ -42,11 +50,11 @@ include_once 'owl-settings.php';
 class Wp_Owl_Carousel {
   protected $dir;
   protected $url;
-  const prefix = 'wp_owl_';
+  const WP_OWL_PREFIX = 'wp_owl_';
 
   function __construct() {
-    $this->url = plugin_dir_url( __FILE__ );
-    $this->dir = plugin_dir_path( __FILE__ );
+    $this->url = untrailingslashit( plugin_dir_url( __FILE__ ) );
+    $this->dir = untrailingslashit( plugin_dir_path( __FILE__ ) );
 
     add_action( 'wp_enqueue_scripts', array( $this, 'load_assets' ) );
     add_action( 'init', array( $this, 'create_post_type' ) );
@@ -59,27 +67,27 @@ class Wp_Owl_Carousel {
 
   function load_assets() {
     // don't load any assets
-    if ( ! apply_filters( 'wp_owl_carousel_enqueue_assets', true ) ) {
+    if ( ! apply_filters( 'wp_owl_enqueue_assets', true ) ) {
       return;
     }
 
     // enqueue base style
-    if ( apply_filters( 'wp_owl_carousel_enqueue_css', true ) ) {
-      wp_enqueue_style( 'owl-style', $this->url . '/owlcarousel2/dist/assets/owl.carousel.min.css', array(), false );
+    if ( apply_filters( 'wp_owl_enqueue_vendor_css', true ) ) {
+      wp_enqueue_style( 'owl-carousel-style', $this->url . '/owlcarousel2/dist/assets/owl.carousel.min.css', array(), false );
 
       // enqueue theme style
-      if ( apply_filters( 'wp_owl_carousel_enqueue_theme_css', true ) ) {
-        wp_enqueue_style( 'owl-theme', $this->url . '/owlcarousel2/dist/assets/owl.carousel.default.css', array( 'owl-style' ), false );
+      if ( apply_filters( 'wp_owl_enqueue_theme_css', true ) ) {
+        wp_enqueue_style( 'wp-owl-theme', $this->url . '/owlcarousel2/dist/assets/owl.carousel.default.css', array( 'owl-carousel-style' ), false );
       }
     }
 
     // enqueue js
-    if ( apply_filters( 'wp_owl_carousel_enqueue_owl_js', true ) ) {
-      wp_enqueue_script( 'owl-carousel', $this->url . '/owlcarousel2/dist/owl.carousel.min.js', array( 'jquery' ), false, true );
+    if ( apply_filters( 'wp_owl_enqueue_vendor_js', true ) ) {
+      wp_enqueue_script( 'owl-carousel-script', $this->url . '/owlcarousel2/dist/owl.carousel.min.js', array( 'jquery' ), false, true );
 
       // enqueue plugin js
-      if ( apply_filters( 'wp_owl_carousel_enqueue_plugin_js', true ) ) {
-        wp_enqueue_script( 'wp-owl-carousel', $this->url . '/assets/js/wp-owl-carousel.min.js', array( 'owl-carousel' ), false, true );
+      if ( apply_filters( 'wp_owl_enqueue_plugin_js', true ) ) {
+        wp_enqueue_script( 'wp-owl-js', $this->url . '/assets/js/wp-owl-carousel.js', array( 'owl-carousel-script' ), false, true );
       }
     }
   }
@@ -118,7 +126,7 @@ class Wp_Owl_Carousel {
     $carousel_metabox->add_field( array(
       'name' => __( 'Images', 'wp_owl' ),
       'desc' => __( 'Images to use', 'wp_owl' ),
-      'id' => self::prefix . 'images',
+      'id' => self::WP_OWL_PREFIX . 'images',
       'type' => 'file_list'
     ) );
 
@@ -126,7 +134,7 @@ class Wp_Owl_Carousel {
     $carousel_metabox->add_field( array(
       'name' => __( 'Select size', 'wp_owl' ),
       'desc' => __( 'Select image size to use.', 'wp_owl' ),
-      'id' => self::prefix . 'image_size',
+      'id' => self::WP_OWL_PREFIX . 'image_size',
       'type' => 'select',
       'show_option_none' => false,
       'default' => 'custom',
@@ -138,14 +146,14 @@ class Wp_Owl_Carousel {
       'desc' => __( 'Used to open images in a lightbox, see the documentation of your lightbox plugin for this value.', 'wp_owl' ),
       'default' => 'lightbox',
       'type' => 'text',
-      'id' => self::prefix . 'rel'
+      'id' => self::WP_OWL_PREFIX . 'rel'
     ) );
 
     $carousel_metabox->add_field( array(
       'name' => __( 'Link to image size', 'wp_owl' ),
       'desc' => __( 'Generates link to specified image size.', 'wp_owl' ),
       'type' => 'select',
-      'id' => self::prefix . 'link_to_size',
+      'id' => self::WP_OWL_PREFIX . 'link_to_size',
       'options' => array_merge( array( 'none' ), $image_sizes )
     ) );
 
@@ -160,7 +168,7 @@ class Wp_Owl_Carousel {
       $carousel_metabox->add_field( array(
         'name' => $setting['name'],
         'description' => $setting['desc'],
-        'id' => self::prefix . $id,
+        'id' => self::WP_OWL_PREFIX . $id,
         'type' => $setting['cmb_type'],
         'default' => $def
       ) );
@@ -184,7 +192,7 @@ class Wp_Owl_Carousel {
     return $this->generate_owl_html( esc_attr( $attributes['id'] ) );
   }
 
-  function get_image_attr( $lazy_load, $image ) {
+  private function get_image_attr( $lazy_load, $image ) {
     if ( $lazy_load ) {
       return "data-src=\"{$image[0]}\" class=\"owl-lazy\"";
     }
@@ -201,32 +209,38 @@ class Wp_Owl_Carousel {
       return;
     }
 
-    $break_container = get_post_meta( $id, self::prefix . 'break_container', true );
-    $lazy_load = get_post_meta( $id, self::prefix . 'lazyLoad', true );
-    $size_id = get_post_meta( $id, self::prefix . 'image_size', true );
+    $break_container = get_post_meta( $id, self::WP_OWL_PREFIX . 'break_container', true );
+    $lazy_load = get_post_meta( $id, self::WP_OWL_PREFIX . 'lazyLoad', true );
+    $size_id = get_post_meta( $id, self::WP_OWL_PREFIX . 'image_size', true );
     $sizes = get_intermediate_image_sizes();
     $settings = json_encode( $this->generate_settings_array( $id ) );
 
     ob_start();
 
+    do_action( 'wp_owl_before_carousel', $id );
+
     // TODO: add some filters so people can customize id/class on both the container AND image.
     echo sprintf( '<div id="owl-carousel-%s" class="owl-carousel" data-owl-options="%s">', $id, htmlspecialchars( $settings, ENT_QUOTES, 'utf-8' ) );
 
-    foreach ( $files as $id => $url ) {
-      $image = wp_get_attachment_image_src( $id, $sizes[$size_id] );
+    foreach ( $files as $attachment_id => $attachment_url ) {
+      $image = wp_get_attachment_image_src( $attachment_id, $sizes[$size_id] );
 
-      echo '  <div>';
-      echo sprintf( '   <img %s width="%s" height="%s" />', self::get_image_attr( $lazy_load, $image ), $image[1], $image[2] );
-      echo '  </div>';
+      do_action( 'wp_owl_before_carousel_image', $id, $image );
+
+      echo sprintf( '<img %s width="%s" height="%s" />', $this->get_image_attr( $lazy_load, $image ), $image[1], $image[2] );
+
+      do_action( 'wp_owl_after_carousel_image', $id, $image );
     }
 
     echo '</div>';
+
+    do_action( 'wp_owl_after_carousel', $id );
 
     return ob_get_clean();
   }
 
   // TODO: maybe just use ids to save the extra query?
-  function wp_slug_to_id( $slug ) {
+  private function wp_slug_to_id( $slug ) {
     $posts = get_posts( array(
       'post_type' => 'wp_owl',
       'posts_per_page' => 1,
@@ -237,7 +251,7 @@ class Wp_Owl_Carousel {
   }
 
   function get_owl_items( $id ) {
-    $files = get_post_meta( $id, self::prefix . 'images', 1 );
+    $files = get_post_meta( $id, self::WP_OWL_PREFIX . 'images', 1 );
     return $files;
   }
 
@@ -246,7 +260,7 @@ class Wp_Owl_Carousel {
     $new_settings = array();
 
     foreach( $owl_settings as $key => $value ) {
-      $saved = get_post_meta( $id, self::prefix . $key, true );
+      $saved = get_post_meta( $id, self::WP_OWL_PREFIX . $key, true );
 
       if ( $owl_settings[$key]['cmb_type'] == 'checkbox' ) {
         $new_settings[$key] = ($saved == 'on' ? true : false);

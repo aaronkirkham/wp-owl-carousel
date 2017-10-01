@@ -3,7 +3,7 @@
  * The main settings to pass to WordPress and Owl Carousel
  *
  * @author Aaron Kirkham
- * @version 2.0.0
+ * @version 2.0.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

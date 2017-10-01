@@ -4,8 +4,6 @@
       var that = $(this);
       var settings = that.data('owl-options');
 
-      console.log(settings);
-
       if (settings.autoPlay == 0) {
         settings.autoPlay = false;
       }

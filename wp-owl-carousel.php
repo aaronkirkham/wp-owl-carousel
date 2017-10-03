@@ -56,11 +56,15 @@ class Wp_Owl_Carousel {
     $this->url = untrailingslashit( plugin_dir_url( __FILE__ ) );
     $this->dir = untrailingslashit( plugin_dir_path( __FILE__ ) );
 
+    add_action( 'init', array( $this, 'init' ) );
     add_action( 'wp_enqueue_scripts', array( $this, 'load_assets' ) );
-    add_action( 'init', array( $this, 'create_post_type' ) );
     add_action( 'edit_form_after_title', array( $this, 'render_shortcode_helper' ) );
     add_action( 'cmb2_init', array( $this, 'create_metaboxes' ) );
     add_shortcode( 'wp_owl', array( $this, 'shortcode' ) );
+
+    // admin
+    add_action( 'admin_enqueue_scripts', array( $this, 'admin_load_assets' ) );
+    add_action( 'wp_ajax_get_owl_carousels', array( $this, 'admin_ajax_get_carousels' ) );
 
     load_plugin_textdomain( 'wp_owl', false, basename( dirname( __FILE__ ) ) . '/languages' );
   }
@@ -92,7 +96,67 @@ class Wp_Owl_Carousel {
     }
   }
 
-  function create_post_type() {
+  function admin_load_assets() {
+    wp_enqueue_style( 'wp-owl-carousel-admin', $this->url . '/assets/css/wp-owl-admin.css' );
+  }
+
+  // TODO: delete cached results if a wp_owl post gets added/edited/deleted
+  function admin_ajax_get_carousels() {
+    ob_start();
+
+    $posts = get_posts( array( 'post_type' => 'wp_owl' ) );
+
+    // TODO: use cached results
+
+    foreach ( $posts as $post ) {
+      $orig_files = $this->get_owl_items( $post->ID );
+
+      // grab only the latest 5 images
+      $files = array_slice( $orig_files, 0, 5, true );
+
+      echo '<input type="checkbox" name="" id="wp-owl-carousel-' . $post->ID . '" class="wp-owl-carousel-item__checkbox" />';
+      echo '<label for="wp-owl-carousel-' . $post->ID . '" class="wp-owl-carousel-item" data-id="' . $post->ID . '">';
+      echo '  <h2 class="wp-owl-carousel-item__title">' . $post->post_title . '</h2>';
+      echo '  <p class="wp-owl-carousel-p">Images in carousel:</p>';
+      echo '  <div class="wp-owl-carousel-item__images">';
+      
+      foreach ( $files as $attachment_id => $attachment_url ) {
+        $image = wp_get_attachment_image_src( $attachment_id, array( 50, 50 ) );
+        echo '    <img src="' . $image[0] . '" width="' . $image[1] . '" height="' . $image[2] . '" class="wp-owl-carousel-item__image" />';
+      }
+
+      // do we have any files remaining from the slice?
+      $diff = sizeof( $orig_files ) - sizeof( $files );
+      if ( $diff > 0 ) {
+        echo '    <div class="wp-owl-carousel-item__image-placeholder"><span>+' . $diff . '</span></div>';
+      }
+
+      echo '  </div>';
+      echo '</label>';
+    }
+
+    // TODO: cache the results
+
+    echo ob_get_clean();
+    wp_die();
+  }
+
+  function mce_register_buttons( $buttons ) {
+    array_push( $buttons, 'wp_owl' );
+    return $buttons;
+  }
+
+  function mce_add_buttons( $plugin_array ) {
+    $plugin_array['wp_owl'] = $this->url . '/assets/js/wp-owl-admin.js';
+    return $plugin_array;
+  }
+
+  function init() {
+    // register mce buttons
+    add_filter( 'mce_buttons', array( $this, 'mce_register_buttons' ) );
+    add_filter( 'mce_external_plugins', array( $this, 'mce_add_buttons' ) );
+
+    // register custom post type
     register_post_type( 'wp_owl',
       array(
         'labels' => array(
@@ -181,15 +245,16 @@ class Wp_Owl_Carousel {
       return;
     }
 
-    echo sprintf( '<p>%s: [wp_owl id="%s"]</p>', __( 'Paste this shortcode into a post or a page', 'wp_owl' ), $post->post_name );
+    echo sprintf( '<p>%s: [wp_owl id="%s"]</p>', __( 'Paste this shortcode into a post or a page', 'wp_owl' ), $post->ID );
   }
 
   function shortcode( $atts, $content = null ) {
     $attributes = shortcode_atts( array(
-      'id' => ''
+      'id' => '',
+      'slug' => ''
     ), $atts );
 
-    return $this->generate_owl_html( esc_attr( $attributes['id'] ) );
+    return $this->generate_owl_html( $attributes );
   }
 
   private function get_image_attr( $lazy_load, $image ) {
@@ -201,8 +266,26 @@ class Wp_Owl_Carousel {
     }
   }
 
-  function generate_owl_html( $slug ) {
-    $id = $this->wp_slug_to_id( $slug );
+  private function get_id_from_attributes( $attributes ) {
+    $id = $attributes['id'];
+    $slug = $attributes['slug'];
+
+    if ( strlen( $id ) > 0 ) {
+      return (int)$id;
+    }
+    else if ( strlen( $slug ) > 0 ) {
+      return $this->wp_slug_to_id( $slug );
+    }
+
+    return null;
+  }
+
+  function generate_owl_html( $attributes ) {
+    $id = $this->get_id_from_attributes( $attributes );
+    if ( $id === null ) {
+      return;
+    }
+
     $files = $this->get_owl_items( $id );
 
     if ( empty( $files ) ) {

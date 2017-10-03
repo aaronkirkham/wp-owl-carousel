@@ -1,0 +1,66 @@
+.wp-owl-carousel-item {
+  display: block;
+  margin-top: 15px;
+}
+
+.wp-owl-carousel-item:not(:last-of-type) {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.wp-owl-carousel-item__title {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 25px;
+}
+
+.wp-owl-carousel-p {
+  font-size: 11px;
+  display: block;
+  margin: 0 0 3px 0 !important;
+  padding: 0 !important;
+  color: #989898;
+}
+
+.wp-owl-carousel-item__images {
+  line-height: 0;
+}
+
+.wp-owl-carousel-item__image {
+  border: 1px solid #e9e9e9;
+  border-radius: 2px;
+  padding: 5px;
+  margin-bottom: 3px;
+}
+
+.wp-owl-carousel-item__image-placeholder {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  width: 50px;
+  height: 50px;
+  background-color: #e9e9e9;
+  border: 1px solid #e9e9e9;
+  border-radius: 2px;
+  padding: 5px;
+  margin-bottom: 3px;
+}
+
+.wp-owl-carousel-item__image-placeholder span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: #797979;
+}
+
+.wp-owl-carousel-item__checkbox {
+  float: left;
+  margin-top: 15px !important;
+}
+
+/* .wp-owl-carousel-item__checkbox:checked + .wp-owl-carousel-item {
+  background-color: #f0f0f0;
+} */
